@@ -30,8 +30,10 @@ func submitOAuth(gClient *madon.Client) *widgets.QWidget {
 		if token != "" {
 		   // err outputted here
 		   err := oAuth2ExchangeCode(token, gClient)
+		   if(err == nil){
+			setInstance(gClient)
+		   }
 		   fmt.Println(err)
-		
 		} else if token == "" {
 			widgets.QMessageBox_Information(nil, "I have logged in on this address", "Your token cannot be blank", widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 		}

@@ -2,7 +2,7 @@ package main
 import (
        "fmt"
        "github.com/McKael/madon"
-	"errors"
+       "errors"
 )
 
 func getAuth(instance string) (url string, gClient *madon.Client){
@@ -26,7 +26,9 @@ func getAuth(instance string) (url string, gClient *madon.Client){
     }
 }
 
-func oAuth2ExchangeCode(tokenCode string, gClient *madon.Client) error {
+// I removed gClient *madon.Client from output
+
+func oAuth2ExchangeCode(tokenCode string, gClient *madon.Client) (err error) {
     var scopes = []string{"read", "write", "follow"}
 	// (gClient != nil thanks to PreRun)
 
@@ -35,7 +37,9 @@ func oAuth2ExchangeCode(tokenCode string, gClient *madon.Client) error {
 	}
 
 	// The code has been set; proceed with token exchange
-	_, err := gClient.LoginOAuth2(tokenCode, scopes)
+	consentURL , err := gClient.LoginOAuth2(tokenCode, scopes)
+	fmt.Println(consentURL)
+
 	if err != nil {
 		return err
 	}
