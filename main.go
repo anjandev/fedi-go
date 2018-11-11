@@ -17,7 +17,10 @@ func main() {
 
     // add error checking if instance does not exist
     // NewInstance().Show()
-    _ = readInstance()
+    client := readInstance()
+
+    // gClient is output
+    _ = getAuthResume(client)
 
 
     widgets.QApplication_Exec()

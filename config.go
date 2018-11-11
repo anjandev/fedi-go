@@ -4,7 +4,6 @@ import (
        "github.com/McKael/madon"
 	"encoding/json"
 	"io/ioutil"
-	"fmt"
 	"os"
 	"strings"
 )
@@ -46,7 +45,6 @@ func readInstance() (client ClientStruct){
     content, _ := ioutil.ReadAll(jsonFile)
 
 
-    fmt.Println(string(content))
     dec := json.NewDecoder(strings.NewReader(string(content)))
 
     var clientStruct ClientStruct
@@ -58,6 +56,5 @@ func readInstance() (client ClientStruct){
     }
 
 
-    fmt.Println(clientStruct)
     return clientStruct
 }
