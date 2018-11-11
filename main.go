@@ -5,7 +5,6 @@ import (
 	 // "github.com/therecipe/qt/core"
 	// "github.com/therecipe/qt/uitools"
 	"github.com/therecipe/qt/widgets"
-	// "fmt"
 )
 
 const APPNAME string = "fedi-go"
@@ -13,13 +12,13 @@ const APPWEBSITE string = "momi.ca"
 const CONFIG_PATH string = "~/.config/fedi-go"
 
 func main() {
-	widgets.NewQApplication(len(os.Args), os.Args)
+    widgets.NewQApplication(len(os.Args), os.Args)
 
-	oAuthToken := ""
 
-	if oAuthToken == "" {
-		NewInstance().Show()
-	}
+    // add error checking if instance does not exist
+    // NewInstance().Show()
+    _ = readInstance()
 
-	widgets.QApplication_Exec()
+
+    widgets.QApplication_Exec()
 }
