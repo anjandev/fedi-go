@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"fmt"
 )
 
 type ClientStruct struct {
@@ -22,14 +23,25 @@ type ClientStruct struct {
     } `json:"UserToken"` // In order to parse properly, the variable names' first char must be capitalized
 }
 
-const INSTANCE_FILE = "/home/anjan/output.json"
+const INSTANCE_FILE = CONFIG_PATH + "/oAuth.json"
 
-func setInstance(gClient *madon.Client) (err error){
+func setInstance(gClient *madon.Client){
 // TODO: make folder fedi-go
     instance, _ := json.Marshal(gClient)
-    err = ioutil.WriteFile(INSTANCE_FILE, instance, 0644)
 
-    return err
+    file, error := os.Create(INSTANCE_FILE)
+
+    if error != nil {
+	fmt.Println(error)
+    }
+
+    defer file.Close()
+
+    err := ioutil.WriteFile(INSTANCE_FILE, instance, 0644)
+    if err != nil {
+	fmt.Println(err)
+    }
+
 }
 
 func readInstance() (client ClientStruct){
@@ -54,7 +66,6 @@ func readInstance() (client ClientStruct){
     if err != nil {
 	    panic(err)
     }
-
 
     return clientStruct
 }

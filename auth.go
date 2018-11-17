@@ -24,6 +24,7 @@ func getAuth(instance string) (url string, gClient *madon.Client){
 	fmt.Println(url)
 	return url, gClient
     }
+    // write to file here
 }
 
 // I removed gClient *madon.Client from output
@@ -50,11 +51,3 @@ func oAuth2ExchangeCode(tokenCode string, gClient *madon.Client) (err error) {
 	return nil
 }
 
-func getAuthResume(client ClientStruct) (gClient *madon.Client){
-	gClient, err := madon.RestoreApp(APPNAME, client.InstanceURL, client.ID, client.Secret, nil)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return gClient
-}

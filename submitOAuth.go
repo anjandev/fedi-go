@@ -5,10 +5,7 @@ import (
 	"github.com/therecipe/qt/uitools"
 	"github.com/therecipe/qt/widgets"
        "github.com/McKael/madon"
-	"fmt"
 )
-
-// TODO: WRITE IT TO PARAM TO DISK
 
 func submitOAuth(gClient *madon.Client) *widgets.QWidget {
 	var widget = widgets.NewQWidget(nil, 0)
@@ -33,7 +30,6 @@ func submitOAuth(gClient *madon.Client) *widgets.QWidget {
 		   if(err == nil){
 			setInstance(gClient)
 		   }
-		   fmt.Println(err)
 		} else if token == "" {
 			widgets.QMessageBox_Information(nil, "I have logged in on this address", "Your token cannot be blank", widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 		}
