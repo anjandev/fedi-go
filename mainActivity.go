@@ -38,49 +38,7 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 	})
 
     ui_updateFeed.ConnectClicked(func(bool) {
-	opt := timelineOpts
-	prevLastId := <- lastIDchan
-	statuses := timelineGetter(gClient, opt.maxID, prevLastId)
-	if len(statuses) == 0{
-	    go func() {
-		lastIDchan <- prevLastId
-	    }()
-	    return
-	}
-	fmt.Println("PREVIOUS ID")
-	fmt.Println(prevLastId)
-
-	go func() {
-	lastIDchan <- statuses[0].ID
-	}()
-
-	oldStatusStillIn := false
-	var oldStatusIdx int
-
-	for i := 0; i < len(statuses); i++{
-	    if (statuses[i].ID == prevLastId){
-		oldStatusStillIn = true
-		oldStatusIdx = i
-		break
-	    }
-	}
-
-	for i := 0; i < len(statuses); i++{
-		fmt.Println(statuses[i].ID)
-	}
-
-	// TODO: I repeat this code 3 times only changing the initial i. put into function
-
-	if oldStatusStillIn {
-		for i := 0; i < oldStatusIdx; i++ {
-		    makePost(statuses[i], *ui_posts, gClient)
-		}
-	} else if !oldStatusStillIn {
-		fmt.Println("OLD STATUS NOT IN")
-		for i := len(statuses)-1; i >= 0; i-- {
-		    makePost(statuses[i], *ui_posts, gClient)
-		}
-	}
+	add2Feed(gClient,lastIDchan, ui_posts, false)
     })
 
 
@@ -106,7 +64,7 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
     layout.AddWidget(formWidget, 0, 0)
     widget.SetLayout(layout)
 
-    add2Feed(gClient, lastIDchan, ui_posts)
+    add2Feed(gClient, lastIDchan, ui_posts, true)
 
     widget.SetWindowTitle("Fedi-go")
 

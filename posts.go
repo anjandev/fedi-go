@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/therecipe/qt/widgets"
     "github.com/McKael/madon"
-   "fmt"
 )
 
 func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, gClient *madon.Client) (widgets.QVBoxLayout){
@@ -61,15 +60,33 @@ func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, gClient *madon.
     return ui_posts
 }
 
-func add2Feed (gClient *madon.Client, lastIDchan chan int64, ui_posts *widgets.QVBoxLayout) () {
-    opt := timelineOpts
-    statuses := timelineGetter(gClient, opt.maxID, opt.sinceID)
+func add2Feed (gClient *madon.Client, lastIDchan chan int64, ui_posts *widgets.QVBoxLayout, initialize bool) () {
+    var statuses []madon.Status
 
-    fmt.Println(len(statuses))
+    if initialize {
+	opt := timelineOpts
+	statuses = timelineGetter(gClient, opt.maxID, opt.sinceID)
+	go func() {
+	    lastIDchan <- statuses[0].ID}()
+
+    } else {
+	prevLastId := <- lastIDchan
+	opt := timelineOpts
+	statuses = timelineGetter(gClient, opt.maxID, prevLastId)
+
+	if len(statuses) == 0{
+	    go func() {
+		lastIDchan <- prevLastId
+	    }()
+	    return
+	}
+
+	go func() {
+	    lastIDchan <- statuses[0].ID
+	}()
+    }
+
     for i := len(statuses)-1; i >= 0; i--{
 	makePost(statuses[i], *ui_posts, gClient)
     }
-
-	go func() {
-		lastIDchan <- statuses[0].ID}()
 }
