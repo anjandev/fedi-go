@@ -35,8 +35,5 @@ func main() {
 
     login(gClient).Show()
 
-    lastIDchan := make(chan int64)
-    mainActivity(gClient, lastIDchan).Show()
-
     widgets.QApplication_Exec()
 }

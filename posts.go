@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/therecipe/qt/widgets"
-    "github.com/McKael/madon"
+	"github.com/McKael/madon"
 )
 
 func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, gClient *madon.Client) (widgets.QVBoxLayout){
@@ -60,19 +60,18 @@ func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, gClient *madon.
     return ui_posts
 }
 
-func add2Feed (gClient *madon.Client, lastIDchan chan int64, ui_posts *widgets.QVBoxLayout, initialize bool) () {
+func add2Feed (gClient *madon.Client, lastIDchan chan int64, ui_posts *widgets.QVBoxLayout, initialize bool, timeline string) () {
     var statuses []madon.Status
 
     if initialize {
 	opt := timelineOpts
-	statuses = timelineGetter(gClient, opt.maxID, opt.sinceID)
+	statuses = timelineGetter(gClient, opt.maxID, opt.sinceID, timeline)
 	go func() {
 	    lastIDchan <- statuses[0].ID}()
-
     } else {
 	prevLastId := <- lastIDchan
 	opt := timelineOpts
-	statuses = timelineGetter(gClient, opt.maxID, prevLastId)
+	statuses = timelineGetter(gClient, opt.maxID, prevLastId, timeline)
 
 	if len(statuses) == 0{
 	    go func() {

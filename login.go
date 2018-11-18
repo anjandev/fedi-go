@@ -33,10 +33,13 @@ func login(gClient *madon.Client) (*widgets.QWidget) {
 		fmt.Println(err)
 		// TODO: make this error message more detailed
 		widgets.QMessageBox_Information(nil, "An error ocurred. See terminal output", "An error ocurred. See terminal output", widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+	    } else {
+		// TODO: Save to file
+		widgets.QMessageBox_Information(nil, "Authentication successful", "Authentication successful", widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+		widget.Close()
+		lastIDchan := make(chan int64)
+		mainActivity(gClient, lastIDchan).Show()
 	    }
-	    // TODO: Save to file
-	    widgets.QMessageBox_Information(nil, "Authentication successful", "Authentication successful", widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-	    widget.Close()
 	})
 
 	var layout = widgets.NewQVBoxLayout()

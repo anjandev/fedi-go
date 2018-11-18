@@ -30,21 +30,33 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 	    ui_updateFeed = widgets.NewQPushButtonFromPointer(widget.FindChild("updateFeed", core.Qt__FindChildrenRecursively).Pointer())
 	    ui_msg = widgets.NewQTextEditFromPointer(widget.FindChild("postMsg", core.Qt__FindChildrenRecursively).Pointer())
 	    ui_timelineSelector = widgets.NewQComboBoxFromPointer(widget.FindChild("timelineSelector", core.Qt__FindChildrenRecursively).Pointer())
+	    // ui_scrollAreaContent = widgets.NewQWidgetFromPointer(widget.FindChild("scrollAreaWidgetContents", core.Qt__FindChildrenRecursively).Pointer())
+	    ui_scrollArea = widgets.NewQScrollAreaFromPointer(widget.FindChild("scrollArea", core.Qt__FindChildrenRecursively).Pointer())
 	)
 
-	
-	ui_timelineSelector.ConnectActivated(func(index int) {
-		fmt.Println("lol")
-	})
-
-    ui_updateFeed.ConnectClicked(func(bool) {
-	add2Feed(gClient,lastIDchan, ui_posts, false)
+    ui_timelineSelector.ConnectActivated(func(index int) {
+	// clear channel of old Ids if user has changed the timeline
+	if ui_posts.Count() > 0 {
+	    fmt.Println(<- lastIDchan)
+	}
+	// delete all children
+//	for i:= 0; i < ui_posts.Count(); i++ {
+//	    child := ui_posts.ItemAt(i)
+//	    ui_posts.RemoveItem(child)
+//	}
+	// ui_scrollArea.TakeWidget()
+	// add2Feed(gClient,lastIDchan, ui_posts, true, ui_timelineSelector.CurrentText())
+	ui_scrollArea.TakeWidget()
+	ui_postsContent := widgets.NewQWidget(nil, 0)
+	ui_posts = widgets.NewQVBoxLayout()
+	ui_postsContent.SetLayout(ui_posts)
+	ui_scrollArea.SetWidget(ui_postsContent)
+	add2Feed(gClient, lastIDchan, ui_posts, true, ui_timelineSelector.CurrentText())
     })
 
-
-//	for i:= 0; i < len(updates); i++{
-//		updates.Data
-//	}
+    ui_updateFeed.ConnectClicked(func(bool) {
+	add2Feed(gClient,lastIDchan, ui_posts, false, ui_timelineSelector.CurrentText())
+    })
 
     // Sending post handler
     ui_sendMsg.ConnectClicked(func(bool) {
@@ -58,13 +70,13 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 	}
     })
 
-
-    // Fill first open with content :3
     var layout = widgets.NewQVBoxLayout()
     layout.AddWidget(formWidget, 0, 0)
     widget.SetLayout(layout)
 
-    add2Feed(gClient, lastIDchan, ui_posts, true)
+    // Fill first open with content :3
+    // this should only happen once (in the beginning)
+    add2Feed(gClient, lastIDchan, ui_posts, true, ui_timelineSelector.CurrentText())
 
     widget.SetWindowTitle("Fedi-go")
 

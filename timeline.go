@@ -11,7 +11,7 @@ var timelineOpts struct {
 	sinceID, maxID   int64
 }
 
-func timelineGetter(gClient *madon.Client, maxId int64, minId int64) (statuses []madon.Status){
+func timelineGetter(gClient *madon.Client, maxId int64, minId int64, timeline string) (statuses []madon.Status){
     opt := timelineOpts
 
     var limOpts *madon.LimitParams
@@ -21,7 +21,7 @@ func timelineGetter(gClient *madon.Client, maxId int64, minId int64) (statuses [
     limOpts.SinceID = minId
 
 
-    statuses, err := gClient.GetTimelines("public", false, false, limOpts)
+    statuses, err := gClient.GetTimelines(timeline, false, false, limOpts)
     if err != nil {
 	fmt.Println(err)
     }
