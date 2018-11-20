@@ -16,12 +16,15 @@ func makeImage(status madon.Status) (*webengine.QWebEngineView) {
     return image
 }
 
-func makeContent(status madon.Status) (*widgets.QTextBrowser) {
-    post := widgets.NewQTextBrowser(nil)
-	contentInPost := "<p>By: " + status.Account.Username + "</p>\n" + status.Content + "\nID: " + strconv.FormatInt(status.ID, 10)
+func makeContent(status madon.Status) (*widgets.QLabel) {
+    contentInPost := "<p>By: " + status.Account.Username + "</p>\n" + status.Content + "\nID: " + strconv.FormatInt(status.ID, 10)
+    post := widgets.NewQLabel(nil, 0)
+    post.SetText(contentInPost)
 
-    post.SetHtml(contentInPost)
+    post.SetWordWrap(true)
+    post.SetOpenExternalLinks(true)
+    // set text selectable by mouse: https://doc.qt.io/qt-5/qt.html#TextInteractionFlag-enum
+    post.SetTextInteractionFlags(1)
 
-    post.SetMinimumHeight(textHeight(contentInPost))
     return post
 }
