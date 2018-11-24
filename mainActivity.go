@@ -24,15 +24,18 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
     var formWidget = loader.Load(file, widget)
     file.Close()
 
-	var (
-	    ui_posts = widgets.NewQVBoxLayoutFromPointer(widget.FindChild("posts", core.Qt__FindChildrenRecursively).Pointer())
-	    ui_sendMsg = widgets.NewQPushButtonFromPointer(widget.FindChild("pushButtonPostMsg", core.Qt__FindChildrenRecursively).Pointer())
-	    ui_updateFeed = widgets.NewQPushButtonFromPointer(widget.FindChild("updateFeed", core.Qt__FindChildrenRecursively).Pointer())
-	    ui_msg = widgets.NewQTextEditFromPointer(widget.FindChild("postMsg", core.Qt__FindChildrenRecursively).Pointer())
-	    ui_timelineSelector = widgets.NewQComboBoxFromPointer(widget.FindChild("timelineSelector", core.Qt__FindChildrenRecursively).Pointer())
-	    // ui_scrollAreaContent = widgets.NewQWidgetFromPointer(widget.FindChild("scrollAreaWidgetContents", core.Qt__FindChildrenRecursively).Pointer())
-	    ui_scrollArea = widgets.NewQScrollAreaFromPointer(widget.FindChild("scrollArea", core.Qt__FindChildrenRecursively).Pointer())
-	)
+    var (
+	ui_posts = widgets.NewQVBoxLayoutFromPointer(widget.FindChild("posts", core.Qt__FindChildrenRecursively).Pointer())
+	ui_sendMsg = widgets.NewQPushButtonFromPointer(widget.FindChild("pushButtonPostMsg", core.Qt__FindChildrenRecursively).Pointer())
+	ui_updateFeed = widgets.NewQPushButtonFromPointer(widget.FindChild("updateFeed", core.Qt__FindChildrenRecursively).Pointer())
+	ui_msg = widgets.NewQTextEditFromPointer(widget.FindChild("postMsg", core.Qt__FindChildrenRecursively).Pointer())
+	ui_timelineSelector = widgets.NewQComboBoxFromPointer(widget.FindChild("timelineSelector", core.Qt__FindChildrenRecursively).Pointer())
+	// ui_scrollAreaContent = widgets.NewQWidgetFromPointer(widget.FindChild("scrollAreaWidgetContents", core.Qt__FindChildrenRecursively).Pointer())
+	ui_scrollArea = widgets.NewQScrollAreaFromPointer(widget.FindChild("scrollArea", core.Qt__FindChildrenRecursively).Pointer())
+	ui_replyStatus = widgets.NewQLabelFromPointer(widget.FindChild("replyingStatus", core.Qt__FindChildrenRecursively).Pointer())
+    )
+
+    var replyingTo madon.Status
 
     ui_timelineSelector.ConnectActivated(func(index int) {
 	// clear channel of old Ids if user has changed the timeline
@@ -46,27 +49,33 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 //	}
 	// ui_scrollArea.TakeWidget()
 	// add2Feed(gClient,lastIDchan, ui_posts, true, ui_timelineSelector.CurrentText())
+
+	// put this in a function. Will need to for replying
 	ui_scrollArea.TakeWidget()
 	ui_postsContent := widgets.NewQWidget(nil, 0)
 	ui_posts = widgets.NewQVBoxLayout()
 	ui_postsContent.SetLayout(ui_posts)
 	ui_scrollArea.SetWidget(ui_postsContent)
-	add2Feed(gClient, lastIDchan, ui_posts, true, ui_timelineSelector.CurrentText())
+	add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, true, ui_timelineSelector.CurrentText())
     })
 
     ui_updateFeed.ConnectClicked(func(bool) {
-	add2Feed(gClient,lastIDchan, ui_posts, false, ui_timelineSelector.CurrentText())
+	add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, true, ui_timelineSelector.CurrentText())
     })
 
     // Sending post handler
     ui_sendMsg.ConnectClicked(func(bool) {
 	var newPost madon.PostStatusParams
 	newPost.Text = ui_msg.ToPlainText()
+	newPost.InReplyTo = replyingTo.ID
 	_, error := gClient.PostStatus(newPost)
 	if error != nil {
 	    fmt.Println(error)
 	} else {
-		ui_msg.Clear()
+	    ui_msg.Clear()
+	    ui_replyStatus.SetText("")
+	    var newReply madon.Status
+	    replyingTo = newReply
 	}
     })
 
@@ -76,7 +85,7 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 
     // Fill first open with content :3
     // this should only happen once (in the beginning)
-    add2Feed(gClient, lastIDchan, ui_posts, true, ui_timelineSelector.CurrentText())
+    add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, true, ui_timelineSelector.CurrentText())
 
     widget.SetWindowTitle("Fedi-go")
 

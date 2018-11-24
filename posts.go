@@ -5,13 +5,17 @@ import (
 	"github.com/McKael/madon"
 )
 
-func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, gClient *madon.Client) (widgets.QVBoxLayout){
+func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, ui_replyStatus *widgets.QLabel, replyingTo *madon.Status, gClient *madon.Client) (){
     ui_posts.SetDirection(2)
 
     interactions := widgets.NewQHBoxLayout()
 
     reply := widgets.NewQPushButton(nil)
     reply.SetText("reply")
+    reply.ConnectClicked(func(bool) {
+	*replyingTo = status
+	ui_replyStatus.SetText(makeContent(status).Text())
+    })
     interactions.InsertWidget(0, reply, 0,0)
 
     star := widgets.NewQPushButton(nil)
@@ -57,10 +61,11 @@ func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, gClient *madon.
     }
     post := makeContent(status)
     ui_posts.InsertWidget(0, post, 0,0)
-    return ui_posts
+
 }
 
-func add2Feed (gClient *madon.Client, lastIDchan chan int64, ui_posts *widgets.QVBoxLayout, initialize bool, timeline string) () {
+func add2Feed (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, initialize bool, timeline string) () {
+
     var statuses []madon.Status
 
     if initialize {
@@ -86,6 +91,6 @@ func add2Feed (gClient *madon.Client, lastIDchan chan int64, ui_posts *widgets.Q
     }
 
     for i := len(statuses)-1; i >= 0; i--{
-	makePost(statuses[i], *ui_posts, gClient)
+	makePost(statuses[i], *ui_posts, ui_replyStatus, replyingTo, gClient)
     }
 }

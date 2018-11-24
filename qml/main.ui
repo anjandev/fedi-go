@@ -70,6 +70,19 @@
         </widget>
        </item>
        <item>
+        <widget class="QLabel" name="replyingStatus">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QComboBox" name="timelineSelector">
          <item>
           <property name="text">
