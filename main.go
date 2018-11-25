@@ -6,7 +6,7 @@ import (
 	// "github.com/therecipe/qt/uitools"
 	"github.com/therecipe/qt/widgets"
         "github.com/McKael/madon"
-	"fmt"
+	//"fmt"
 	"github.com/therecipe/qt/core"
 )
 
@@ -40,7 +40,7 @@ func main() {
     client := readInstance()
     gClient, err := madon.RestoreApp(APPNAME, client.InstanceURL, client.ID, client.Secret, nil)
     if err != nil {
-    	fmt.Println(err)
+    	panic(err)
     }
     
 
