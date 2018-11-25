@@ -7,11 +7,13 @@ import (
 	"github.com/therecipe/qt/widgets"
        "github.com/McKael/madon"
 	"fmt"
+	"github.com/therecipe/qt/core"
 )
 
 const APPNAME string = "fedi-go"
 const APPWEBSITE string = "momi.ca"
-const CONFIG_PATH string = "/home/anjan/.config/fedi-go"
+var CONFIG_PATH string = (core.QDir_HomePath() + "/.config/fedi-go")
+var CONFIG_PATH_OAUTH string = CONFIG_PATH + "/OAuth.json"
 
 
 
@@ -21,8 +23,14 @@ func main() {
     mainWindow = widgets.NewQMainWindow(nil, 0)
     mainWindow.SetWindowTitle("fedi")
 
+    if _, err := os.Stat(CONFIG_PATH); err != nil {
+	if os.IsNotExist(err) {
+		os.Mkdir(CONFIG_PATH, os.FileMode(0700))
+	}
+    }
+
     // Rewrite auth.go From
-    if _, err := os.Stat(CONFIG_PATH + "/oAuth.json"); os.IsNotExist(err) {
+    if _, err := os.Stat(CONFIG_PATH_OAUTH); os.IsNotExist(err) {
 	NewInstance().Show()
 	widgets.QApplication_Exec()
     }

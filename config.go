@@ -23,13 +23,12 @@ type ClientStruct struct {
     } `json:"UserToken"` // In order to parse properly, the variable names' first char must be capitalized
 }
 
-const INSTANCE_FILE = CONFIG_PATH + "/oAuth.json"
 
 func setInstance(gClient *madon.Client){
 // TODO: make folder fedi-go
     instance, _ := json.Marshal(gClient)
 
-    file, error := os.Create(INSTANCE_FILE)
+    file, error := os.Create(CONFIG_PATH_OAUTH)
 
     if error != nil {
 	fmt.Println(error)
@@ -37,7 +36,7 @@ func setInstance(gClient *madon.Client){
 
     defer file.Close()
 
-    err := ioutil.WriteFile(INSTANCE_FILE, instance, 0644)
+    err := ioutil.WriteFile(CONFIG_PATH_OAUTH, instance, 0700)
     if err != nil {
 	fmt.Println(err)
     }
@@ -45,7 +44,7 @@ func setInstance(gClient *madon.Client){
 }
 
 func readInstance() (client ClientStruct){
-    jsonFile, err := os.Open(INSTANCE_FILE)
+    jsonFile, err := os.Open(CONFIG_PATH_OAUTH)
 
     if err != nil {
 	    panic(err)
