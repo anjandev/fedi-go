@@ -25,7 +25,6 @@ type ClientStruct struct {
 
 
 func setInstance(gClient *madon.Client){
-// TODO: make folder fedi-go
     instance, _ := json.Marshal(gClient)
 
     file, error := os.Create(CONFIG_PATH_OAUTH)

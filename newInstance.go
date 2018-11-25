@@ -19,16 +19,23 @@ func NewInstance() *widgets.QWidget {
 	var (
 		ui_urlInput = widgets.NewQLineEditFromPointer(widget.FindChild("url", core.Qt__FindChildrenRecursively).Pointer())
 		ui_auth = widgets.NewQPushButtonFromPointer(widget.FindChild("pushButton", core.Qt__FindChildrenRecursively).Pointer())
+		ui_basic = widgets.NewQCheckBoxFromPointer(widget.FindChild("checkBox", core.Qt__FindChildrenRecursively).Pointer())
 	)
 
 	ui_auth.ConnectClicked(func(_ bool) {
-		url, gClient := getAuth(ui_urlInput.Text())
-		if url != "" {
-		    widgets.QMessageBox_Information(nil, "I have logged in on this address", url, widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-		    submitOAuth(gClient).Show()
-		    widget.Close()
-		} else if url == "" {
+		gClient := getClient(ui_urlInput.Text())
+		if !(ui_basic.IsChecked()) {
+		    url := getAuthOAuth(ui_urlInput.Text(), gClient)
+		    if url == "" {
 			widgets.QMessageBox_Information(nil, "I have logged in on this address", "This is not a valid instance", widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+		    } else {
+			widgets.QMessageBox_Information(nil, "I have logged in on this address", url, widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+			submitOAuth(gClient).Show()
+			widget.Close()
+		    }
+		} else {
+		    login(gClient).Show()
+		    widget.Close()
 		}
 	})
 

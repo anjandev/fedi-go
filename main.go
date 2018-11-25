@@ -5,7 +5,7 @@ import (
 	 // "github.com/therecipe/qt/core"
 	// "github.com/therecipe/qt/uitools"
 	"github.com/therecipe/qt/widgets"
-       "github.com/McKael/madon"
+        "github.com/McKael/madon"
 	"fmt"
 	"github.com/therecipe/qt/core"
 )
@@ -35,11 +35,14 @@ func main() {
 	widgets.QApplication_Exec()
     }
 
+
+    // fix it so it checks if basic auth
     client := readInstance()
     gClient, err := madon.RestoreApp(APPNAME, client.InstanceURL, client.ID, client.Secret, nil)
     if err != nil {
-	fmt.Println(err)
+    	fmt.Println(err)
     }
+    
 
     login(gClient).Show()
 

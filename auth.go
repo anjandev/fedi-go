@@ -5,29 +5,41 @@ import (
        "errors"
 )
 
-func getAuth(instance string) (url string, gClient *madon.Client){
+func getClient(instance string) (gClient *madon.Client){
 
     var scopes = []string{"read", "write", "follow"}
     gClient, err := madon.NewApp(APPNAME, APPWEBSITE, scopes, madon.NoRedirect, instance) 
 
+    // TODO: add error checking for bad instance
     if err != nil {
-	fmt.Println(err)
-	return "", nil
+	panic(err)
     }
-
-    url, err = gClient.LoginOAuth2("", scopes)
-
-    if err != nil {
-	fmt.Println(err)
-	return "", nil
-    } else {
-	fmt.Println(url)
-	return url, gClient
-    }
-    // write to file here
+    return gClient
 }
 
-// I removed gClient *madon.Client from output
+func getAuthOAuth(instance string, gClient *madon.Client) (url string){
+    var scopes = []string{"read", "write", "follow"}
+    url, err := gClient.LoginOAuth2("", scopes)
+
+    if err != nil {
+	fmt.Println(err)
+	return ""
+    } else {
+	fmt.Println(url)
+	return url
+    }
+}
+
+func getAuthBasic(login string, password string, gClient *madon.Client) (authed bool){
+    var scopes = []string{"read", "write", "follow"}
+    err := gClient.LoginBasic(login, password, scopes)
+    if err != nil {
+	fmt.Println(err)
+	return false
+    }
+    return true
+}
+
 
 func oAuth2ExchangeCode(tokenCode string, gClient *madon.Client) (err error) {
     var scopes = []string{"read", "write", "follow"}

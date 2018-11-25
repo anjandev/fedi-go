@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>widget</class>
- <widget class="QWidget" name="widget">
+ <class>basic</class>
+ <widget class="QWidget" name="basic">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -57,6 +57,19 @@
    </property>
    <property name="placeholderText">
     <string>Enter your Instance's URL</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBox">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>230</y>
+     <width>85</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Basic Auth</string>
    </property>
   </widget>
  </widget>
