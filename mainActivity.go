@@ -51,16 +51,12 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 	// add2Feed(gClient,lastIDchan, ui_posts, true, ui_timelineSelector.CurrentText())
 
 	// put this in a function. Will need to for replying
-	ui_scrollArea.TakeWidget()
-	ui_postsContent := widgets.NewQWidget(nil, 0)
-	ui_posts = widgets.NewQVBoxLayout()
-	ui_postsContent.SetLayout(ui_posts)
-	ui_scrollArea.SetWidget(ui_postsContent)
-	add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, true, ui_timelineSelector.CurrentText())
+	ui_scrollArea, ui_posts = deletePosts(ui_scrollArea)
+	add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "initialize", ui_timelineSelector.CurrentText(), 0)
     })
 
     ui_updateFeed.ConnectClicked(func(bool) {
-	add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, true, ui_timelineSelector.CurrentText())
+	add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "updatefeed", ui_timelineSelector.CurrentText(), 0)
     })
 
     // Sending post handler
@@ -83,9 +79,10 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
     layout.AddWidget(formWidget, 0, 0)
     widget.SetLayout(layout)
 
+
     // Fill first open with content :3
     // this should only happen once (in the beginning)
-    add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, true, ui_timelineSelector.CurrentText())
+    add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "initialize", ui_timelineSelector.CurrentText(), 0)
 
     widget.SetWindowTitle("Fedi-go")
 

@@ -3,9 +3,11 @@ package main
 import (
 	"github.com/therecipe/qt/widgets"
 	"github.com/McKael/madon"
+	"fmt"
 )
 
-func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, ui_replyStatus *widgets.QLabel, replyingTo *madon.Status, gClient *madon.Client) (){
+
+func makePost(status madon.Status, ui_posts *widgets.QVBoxLayout, ui_replyStatus *widgets.QLabel, replyingTo *madon.Status, ui_scrollArea *widgets.QScrollArea, gClient *madon.Client, lastIDchan chan int64) (){
     ui_posts.SetDirection(2)
 
     interactions := widgets.NewQHBoxLayout()
@@ -62,35 +64,123 @@ func makePost(status madon.Status, ui_posts widgets.QVBoxLayout, ui_replyStatus 
     post := makeContent(status)
     ui_posts.InsertWidget(0, post, 0,0)
 
+
+    moreStatusDetails := widgets.NewQHBoxLayout()
+
+    date := widgets.NewQPushButton(nil)
+    date.SetText(status.CreatedAt.String())
+    date.ConnectClicked(func(bool) {
+	ui_scrollArea,ui_posts = deletePosts(ui_scrollArea)
+    	add2Feed(gClient, lastIDchan, replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "context", "", status.ID)
+    })
+    moreStatusDetails.InsertWidget(0, date, 0,0)
+
+    displayName := widgets.NewQPushButton(nil)
+    displayName.SetText(status.Account.DisplayName)
+    displayName.ConnectClicked(func(bool) {
+	ui_scrollArea,ui_posts = deletePosts(ui_scrollArea)
+    	add2Feed(gClient, lastIDchan, replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "account", "", status.Account.ID)
+    })
+    moreStatusDetails.InsertWidget(0, displayName, 0,0)
+
+
+
+    fullName := widgets.NewQLabel(nil,0)
+    fullName.SetText(status.Account.Acct)
+
+    moreStatusDetails.InsertWidget(0, fullName, 0,0)
+
+    ui_posts.InsertLayout(0, moreStatusDetails, 0)
 }
 
-func add2Feed (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, initialize bool, timeline string) () {
+func add2Feed (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, addType string, timeline string, ID int64) () {
 
     var statuses []madon.Status
 
-    if initialize {
-	opt := timelineOpts
-	statuses = timelineGetter(gClient, opt.maxID, opt.sinceID, timeline)
-	go func() {
-	    lastIDchan <- statuses[0].ID}()
-    } else {
-	prevLastId := <- lastIDchan
-	opt := timelineOpts
-	statuses = timelineGetter(gClient, opt.maxID, prevLastId, timeline)
-
-	if len(statuses) == 0{
+    switch addType {
+	case "initialize":
+	    opt := timelineOpts
+	    statuses = timelineGetter(gClient, opt.maxID, opt.sinceID, timeline)
 	    go func() {
-		lastIDchan <- prevLastId
+		lastIDchan <- statuses[0].ID}()
+	case "updatefeed":
+	    prevLastId := <- lastIDchan
+	    opt := timelineOpts
+	    statuses = timelineGetter(gClient, opt.maxID, prevLastId, timeline)
+
+	    if len(statuses) == 0{
+		go func() {
+		    lastIDchan <- prevLastId
+		}()
+		return
+	    }
+
+	    go func() {
+		lastIDchan <- statuses[0].ID
 	    }()
+	case "account":
+	    opt := timelineOpts
+	    var limOpts *madon.LimitParams
+	    limOpts = new(madon.LimitParams)
+	    limOpts.Limit = int(opt.limit)
+	    limOpts.MaxID = opt.maxID
+	    limOpts.SinceID = opt.sinceID
+	    var err error
+	    statuses, err = gClient.GetAccountStatuses(ID, false, false, false, limOpts)
+	    if err != nil {
+		fmt.Println(err)
+	    }
+	case "context":
+
+	    contexts := make(chan *madon.Context)
+	    fmt.Println(ID)
+
+	    go func() {
+		context, err := gClient.GetStatusContext(ID)
+		// TODO: add status posting algorithm
+		if err != nil {
+		    fmt.Println(err)
+		    return
+		}
+		contexts <- context
+	    }()
+
+	    context := <- contexts
+
+	    statuses = context.Descendants
+	    for i := len(statuses)-1; i >= 0; i--{
+		makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+	    }
+
+
+	    lineSeperator := widgets.NewQProgressBar(nil)
+	    lineSeperator.SetTextVisible(false)
+	    lineSeperator.SetValue(100)
+	    ui_posts.InsertWidget(0, lineSeperator, 0,0)
+
+	    stat, error := gClient.GetStatus(ID)
+	    if error != nil {
+		fmt.Println(error)
+	    }
+
+	    // dereference stat
+	    status := *stat
+	    makePost(status, ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+
+	    lineSeperator2 := widgets.NewQProgressBar(nil)
+	    lineSeperator2.SetTextVisible(false)
+	    lineSeperator2.SetValue(100)
+	    ui_posts.InsertWidget(0, lineSeperator2, 0,0)
+
+	    statuses = context.Ancestors
+	    for i := len(statuses)-1; i >= 0; i--{
+		makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+	    }
+
 	    return
 	}
 
-	go func() {
-	    lastIDchan <- statuses[0].ID
-	}()
-    }
-
     for i := len(statuses)-1; i >= 0; i--{
-	makePost(statuses[i], *ui_posts, ui_replyStatus, replyingTo, gClient)
+	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
     }
 }
