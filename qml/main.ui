@@ -97,7 +97,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="notifications">
          <property name="title">
           <string>Notifications</string>
          </property>
@@ -107,11 +107,6 @@
          <property name="checkable">
           <bool>false</bool>
          </property>
-         <layout class="QGridLayout" name="gridLayout_3">
-          <item row="0" column="0">
-           <layout class="QVBoxLayout" name="notifications"/>
-          </item>
-         </layout>
         </widget>
        </item>
       </layout>

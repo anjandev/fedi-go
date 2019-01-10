@@ -6,12 +6,21 @@ import (
     "github.com/therecipe/qt/widgets"
     "github.com/McKael/madon"
     "fmt"
+    "time"
 )
 
 // Direction to put new items in posts
 // fix this. magic numbers
 const BOTTOM_TO_TOP int = 3
 const TOP_TO_BOTTOM int = 2
+
+
+type QVBoxLayoutCustomSlot struct {
+	widgets.QVBoxLayout
+
+	_ func() `slot:"triggerSlot"`
+}
+
 
 func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidget) {
 
@@ -26,6 +35,7 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 
     var (
 	ui_posts = widgets.NewQVBoxLayoutFromPointer(widget.FindChild("posts", core.Qt__FindChildrenRecursively).Pointer())
+	ui_leftPanel = widgets.NewQGroupBoxFromPointer(widget.FindChild("notifications", core.Qt__FindChildrenRecursively).Pointer())
 	ui_sendMsg = widgets.NewQPushButtonFromPointer(widget.FindChild("pushButtonPostMsg", core.Qt__FindChildrenRecursively).Pointer())
 	ui_updateFeed = widgets.NewQPushButtonFromPointer(widget.FindChild("updateFeed", core.Qt__FindChildrenRecursively).Pointer())
 	ui_msg = widgets.NewQTextEditFromPointer(widget.FindChild("postMsg", core.Qt__FindChildrenRecursively).Pointer())
@@ -85,6 +95,23 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
     add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "initialize", ui_timelineSelector.CurrentText(), 0)
 
     widget.SetWindowTitle("Fedi-go")
+
+    var ui_notif = NewQVBoxLayoutCustomSlot()
+
+    ui_leftPanel.SetLayout(ui_notif)
+
+    ui_notif.ConnectTriggerSlot(func() {
+	ui_notific := widgets.NewQLabel(nil,0)
+	ui_notific.SetText("test")
+	ui_notif.AddWidget(ui_notific, 0, 0)
+    })
+
+    go func() {
+	for {
+	    ui_notif.TriggerSlot()
+	    time.Sleep(100 * time.Millisecond)
+	}
+    }()
 
     return widget
 }
