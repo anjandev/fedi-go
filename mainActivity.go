@@ -101,22 +101,31 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
     ui_leftPanel.SetLayout(ui_notif)
 
     ui_notif.ConnectTriggerSlot(func(notification madon.Notification) {
+	var card = widgets.NewQHBoxLayout()
+
+	var details = widgets.NewQVBoxLayout()
+
 	if notification.Status != nil {
 	    ui_status := widgets.NewQLabel(nil,0)
-	    ui_status.SetText(notification.Status.Content)
+	    ui_status.SetText("<b>" + notification.Status.Content + "</b>")
 	    ui_status.SetWordWrap(true)
-	    ui_notif.InsertWidget(0, ui_status, 0,0)
+	    details.InsertWidget(0, ui_status, 0,0)
 	}
 
 	ui_account := widgets.NewQLabel(nil,0)
 	ui_account.SetText(notification.Account.Acct)
 	ui_account.SetWordWrap(true)
-	ui_notif.InsertWidget(0, ui_account, 0,0)
+	details.InsertWidget(0, ui_account, 0,0)
 
 	ui_type := widgets.NewQLabel(nil,0)
 	ui_type.SetText(notification.Type)
 	ui_type.SetWordWrap(true)
-	ui_notif.InsertWidget(0, ui_type, 0,0)
+	details.InsertWidget(0, ui_type, 0,0)
+
+        card.InsertLayout(0, details, 0)
+        card.InsertWidget(0, postAvatar(notification.Account.Avatar), 0,0)
+
+	ui_notif.InsertLayout(0, card, 0)
     })
 
     go func() {
@@ -134,10 +143,10 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 		continue
 	    }
 
-
+	    if len(notifications) == 0 {
+		continue
+	    }
 	    for i:= 0; i < 6; i++ {
-		fmt.Println(i)
-		fmt.Println(notifications[i].ID)
 	     	if notifications[i].ID == lastNotifID {
 	     		break
 	     	}
@@ -146,7 +155,7 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 
 	     lastNotifID = notifications[0].ID
 
-	    time.Sleep(2 * time.Second)
+	    time.Sleep(2 * time.Minute)
 	}
     }()
 

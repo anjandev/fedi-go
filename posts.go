@@ -116,6 +116,7 @@ func makePost(status madon.Status, ui_posts *widgets.QVBoxLayout, ui_replyStatus
 
     moreStatusDetails.InsertWidget(0, fullName, 0,0)
 
+    moreStatusDetails.InsertWidget(0, postAvatar(status.Account.Avatar), 0,0)
     ui_posts.InsertLayout(0, moreStatusDetails, 0)
 }
 
@@ -315,3 +316,4 @@ func add2Feed (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.S
 	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
     }
 }
+

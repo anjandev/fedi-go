@@ -37,3 +37,16 @@ func deletePosts(ui_scrollArea *widgets.QScrollArea) (*widgets.QScrollArea, *wid
     ui_scrollArea.SetWidget(ui_postsContent)
     return ui_scrollArea, ui_posts
 }
+
+func postAvatar(avatarURL string) (*webengine.QWebEngineView){
+    // in pixels
+    const MAX_SIZE int = 48
+    avatarIcon := webengine.NewQWebEngineView(nil)
+    avatarIcon.SetMinimumWidth(MAX_SIZE+22)
+    avatarIcon.SetMaximumWidth(MAX_SIZE+22)
+    avatarIcon.SetMinimumHeight(MAX_SIZE+22)
+    avatarIcon.SetMaximumHeight(MAX_SIZE+22)
+    html := "<!DOCTYPE html> <html> <body><center> <img src=\"" + avatarURL + "\" style=\"height:" + strconv.Itoa(MAX_SIZE) + "px; width:" + strconv.Itoa(MAX_SIZE) + "px; object-fit: contain\"></center></body> </html> "
+    avatarIcon.SetHtml(html, core.NewQUrl())
+    return avatarIcon
+}
