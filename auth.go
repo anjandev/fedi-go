@@ -8,7 +8,7 @@ import (
 func getClient(instance string) (gClient *madon.Client){
 
     var scopes = []string{"read", "write", "follow"}
-    gClient, err := madon.NewApp(APPNAME, APPWEBSITE, scopes, madon.NoRedirect, instance) 
+    gClient, err := madon.NewApp(APPNAME, "", scopes, madon.NoRedirect, instance)
 
     // TODO: add error checking for bad instance
     if err != nil {
