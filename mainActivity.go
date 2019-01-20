@@ -45,7 +45,15 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 	ui_replyStatus = widgets.NewQLabelFromPointer(widget.FindChild("replyingStatus", core.Qt__FindChildrenRecursively).Pointer())
     )
 
+    var firstID int64 = 0
     var replyingTo madon.Status
+
+    ui_scrollArea.VerticalScrollBar().ConnectValueChanged(func(value int) {
+	if ui_scrollArea.VerticalScrollBar().Value() == ui_scrollArea.VerticalScrollBar().Maximum() {
+	    add2FeedBack (gClient, &firstID, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, ui_timelineSelector.CurrentText())
+	}
+    })
+
 
     ui_timelineSelector.ConnectActivated(func(index int) {
 	// clear channel of old Ids if user has changed the timeline
@@ -62,7 +70,7 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 
 	// put this in a function. Will need to for replying
 	ui_scrollArea, ui_posts = deletePosts(ui_scrollArea)
-	add2FeedInit(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, ui_timelineSelector.CurrentText())
+	add2FeedInit(gClient, &firstID, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, ui_timelineSelector.CurrentText())
     })
 
     ui_updateFeed.ConnectClicked(func(bool) {
@@ -92,7 +100,7 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 
     // Fill first open with content :3
     // this should only happen once (in the beginning)
-    add2FeedInit(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, ui_timelineSelector.CurrentText())
+    add2FeedInit(gClient, &firstID, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, ui_timelineSelector.CurrentText())
 
     widget.SetWindowTitle("Fedi-go")
 

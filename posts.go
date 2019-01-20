@@ -34,7 +34,9 @@ var accountsOpts struct {
 }
 
 func makePost(status madon.Status, ui_posts *widgets.QVBoxLayout, ui_replyStatus *widgets.QLabel, replyingTo *madon.Status, ui_scrollArea *widgets.QScrollArea, gClient *madon.Client, lastIDchan chan int64) (){
-    ui_posts.SetDirection(2)
+
+    together := widgets.NewQVBoxLayout()
+    together.SetDirection(2)
 
     interactions := widgets.NewQHBoxLayout()
 
@@ -80,15 +82,15 @@ func makePost(status madon.Status, ui_posts *widgets.QVBoxLayout, ui_replyStatus
     })
     interactions.InsertWidget(0, repost, 0,0)
 
-    ui_posts.InsertLayout(0, interactions, 0)
+    together.InsertLayout(0, interactions, 0)
 
     if len(status.MediaAttachments) > 0 {
 	image := makeImage(status)
 	// remove this. This wont print all statuses
-	ui_posts.InsertWidget(0, image, 0,0)
+	together.InsertWidget(0, image, 0,0)
     }
     post := makeContent(status)
-    ui_posts.InsertWidget(0, post, 0,0)
+    together.InsertWidget(0, post, 0,0)
 
 
     moreStatusDetails := widgets.NewQHBoxLayout()
@@ -117,7 +119,8 @@ func makePost(status madon.Status, ui_posts *widgets.QVBoxLayout, ui_replyStatus
     moreStatusDetails.InsertWidget(0, fullName, 0,0)
 
     moreStatusDetails.InsertWidget(0, postAvatar(status.Account.Avatar), 0,0)
-    ui_posts.InsertLayout(0, moreStatusDetails, 0)
+    together.InsertLayout(0, moreStatusDetails, 0)
+    ui_posts.AddLayout(together, 0)
 }
 
 func add2FeedContext (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, ID int64) () {
@@ -138,14 +141,15 @@ func add2FeedContext (gClient *madon.Client, lastIDchan chan int64, replyingTo *
 
     statuses := context.Descendants
     for i := len(statuses)-1; i >= 0; i--{
+	ui_posts.SetDirection(3)
 	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
     }
 
-
+    ui_posts.SetDirection(3)
     lineSeperator := widgets.NewQProgressBar(nil)
     lineSeperator.SetTextVisible(false)
     lineSeperator.SetValue(100)
-    ui_posts.InsertWidget(0, lineSeperator, 0,0)
+    ui_posts.AddWidget(lineSeperator, 0, 0)
 
     stat, error := gClient.GetStatus(ID)
     if error != nil {
@@ -154,27 +158,36 @@ func add2FeedContext (gClient *madon.Client, lastIDchan chan int64, replyingTo *
 
     // dereference stat
     status := *stat
+    ui_posts.SetDirection(3)
     makePost(status, ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+    ui_posts.SetDirection(3)
 
     lineSeperator2 := widgets.NewQProgressBar(nil)
     lineSeperator2.SetTextVisible(false)
     lineSeperator2.SetValue(100)
-    ui_posts.InsertWidget(0, lineSeperator2, 0,0)
+
+    ui_posts.AddWidget(lineSeperator2, 0, 0)
 
     statuses = context.Ancestors
     for i := len(statuses)-1; i >= 0; i--{
+	ui_posts.SetDirection(3)
 	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
     }
+
+
+
 }
 
 
-func add2FeedInit (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, timeline string) () {
+func add2FeedInit (gClient *madon.Client, firstID *int64, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, timeline string) () {
     opt := timelineOpts
     statuses := timelineGetter(gClient, opt.maxID, opt.sinceID, timeline)
+    *firstID = statuses[len(statuses)-1].ID
     go func() {
 	lastIDchan <- statuses[0].ID}()
 
-    for i := len(statuses)-1; i >= 0; i--{
+    for i := 0; i < len(statuses); i++{
+	ui_posts.SetDirection(2)
 	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
     }
 }
@@ -196,9 +209,29 @@ func add2FeedUpdate (gClient *madon.Client, lastIDchan chan int64, replyingTo *m
     }()
 
     for i := len(statuses)-1; i >= 0; i--{
+	ui_posts.SetDirection(3)
 	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
     }
 }
+
+
+func add2FeedBack (gClient *madon.Client, firstID *int64, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, timeline string) () {
+	// TODO: Add support for accounts
+
+    statuses := timelineGetter(gClient, *firstID, 0, timeline)
+
+    if len(statuses) == 0{
+	return
+    }
+
+    *firstID = statuses[len(statuses)-1].ID
+
+    for i := 0; i < len(statuses); i++{
+	ui_posts.SetDirection(2)
+	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+    }
+}
+
 
 func add2FeedAccount (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, ID int64) () {
 
@@ -310,7 +343,8 @@ func add2FeedAccount (gClient *madon.Client, lastIDchan chan int64, replyingTo *
     interactions.InsertWidget(0, block, 0,0)
 
 
-    for i := len(statuses)-1; i >= 0; i--{
+    for i := 0; i < len(statuses); i++{
+	ui_posts.SetDirection(2)
 	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
     }
 
