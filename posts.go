@@ -97,7 +97,7 @@ func makePost(status madon.Status, ui_posts *widgets.QVBoxLayout, ui_replyStatus
     date.SetText(status.CreatedAt.String())
     date.ConnectClicked(func(bool) {
 	ui_scrollArea,ui_posts = deletePosts(ui_scrollArea)
-    	add2Feed(gClient, lastIDchan, replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "context", "", status.ID)
+    	add2FeedContext(gClient, lastIDchan, replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, status.ID)
     })
     moreStatusDetails.InsertWidget(0, date, 0,0)
 
@@ -105,7 +105,7 @@ func makePost(status madon.Status, ui_posts *widgets.QVBoxLayout, ui_replyStatus
     displayName.SetText(status.Account.DisplayName)
     displayName.ConnectClicked(func(bool) {
 	ui_scrollArea,ui_posts = deletePosts(ui_scrollArea)
-    	add2Feed(gClient, lastIDchan, replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "account", "", status.Account.ID)
+    	add2FeedAccount(gClient, lastIDchan, replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, status.Account.ID)
     })
     moreStatusDetails.InsertWidget(0, displayName, 0,0)
 
@@ -120,200 +120,199 @@ func makePost(status madon.Status, ui_posts *widgets.QVBoxLayout, ui_replyStatus
     ui_posts.InsertLayout(0, moreStatusDetails, 0)
 }
 
-func add2Feed (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, addType string, timeline string, ID int64) () {
+func add2FeedContext (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, ID int64) () {
 
-    var statuses []madon.Status
+    contexts := make(chan *madon.Context)
 
-    switch addType {
-	case "initialize":
-	    opt := timelineOpts
-	    statuses = timelineGetter(gClient, opt.maxID, opt.sinceID, timeline)
-	    go func() {
-		lastIDchan <- statuses[0].ID}()
-	case "updatefeed":
-	    prevLastId := <- lastIDchan
-	    opt := timelineOpts
-	    statuses = timelineGetter(gClient, opt.maxID, prevLastId, timeline)
-
-	    if len(statuses) == 0{
-		go func() {
-		    lastIDchan <- prevLastId
-		}()
-		return
-	    }
-
-	    go func() {
-		lastIDchan <- statuses[0].ID
-	    }()
-	case "account":
-	    opt := timelineOpts
-	    var limOpts *madon.LimitParams
-	    limOpts = new(madon.LimitParams)
-	    limOpts.Limit = int(opt.limit)
-	    limOpts.MaxID = opt.maxID
-	    limOpts.SinceID = opt.sinceID
-
-	    var err error
-	    statuses, err = gClient.GetAccountStatuses(ID, false, false, false, limOpts)
-	    if err != nil {
-		fmt.Println(err)
-	    }
-
-	    interactions := widgets.NewQHBoxLayout()
-
-	    var accIDs []int64
-	    accIDs = append(accIDs, ID)
-
-	    currentRelationship, errRelation := gClient.GetAccountRelationships(accIDs)
-	    if errRelation != nil{
-		fmt.Println(errRelation)
-	    }
-
-	    follow := widgets.NewQPushButton(nil)
-	    if ! currentRelationship[0].Following {
-		follow.SetText("follow")
-	    } else {
-		follow.SetText("followed!")
-	    }
-
-	    accOpt := accountsOpts
-
-	    followReposts := &accOpt.reblogs
-	    follow.ConnectClicked(func(bool) {
-		if follow.Text() != "followed!" {
-		    _, error := gClient.FollowAccount(ID, followReposts)
-		    if error != nil{
-			    widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-		    } else {
-			follow.SetText("followed!")
-		    }
-		} else {
-		    _, error := gClient.UnfollowAccount(ID)
-		    if error != nil{
-			    widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-		    } else {
-			follow.SetText("follow")
-		    }
-		}
-	    })
-	    interactions.InsertWidget(0, follow, 0,0)
-
-	    muteNotification := &accOpt.muteNotifications
-	    mute := widgets.NewQPushButton(nil)
-
-	    if ! currentRelationship[0].Muting {
-		mute.SetText("mute")
-	    } else {
-		mute.SetText("muted!")
-	    }
-
-	    mute.ConnectClicked(func(bool) {
-		if mute.Text() != "muted!" {
-		    _, error := gClient.MuteAccount(ID, muteNotification)
-		    if error != nil{
-			    widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-		    } else {
-			mute.SetText("muted!")
-		    }
-		} else {
-		    _, error := gClient.UnmuteAccount(ID)
-		    if error != nil{
-			    widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-		    } else {
-			mute.SetText("mute")
-		    }
-		}
-	    })
-	    interactions.InsertWidget(0, mute, 0,0)
-
-
-	    block := widgets.NewQPushButton(nil)
-
-	    if ! currentRelationship[0].Blocking {
-		block.SetText("block")
-	    } else {
-		block.SetText("blocked!")
-	    }
-
-	    block.ConnectClicked(func(bool) {
-		if block.Text() != "blocked!" {
-		    _, error := gClient.BlockAccount(ID)
-		    if error != nil{
-			widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-		    } else {
-			block.SetText("blocked!")
-		    }
-		} else {
-		    _, error := gClient.UnblockAccount(ID)
-		    if error != nil{
-			widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-		    } else {
-			block.SetText("block")
-		    }
-		}
-	    })
-	    interactions.InsertWidget(0, block, 0,0)
-
-
-	    for i := len(statuses)-1; i >= 0; i--{
-		makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
-	    }
-
-	    ui_posts.InsertLayout(0, interactions, 0)
-	    return
-
-	case "context":
-
-	    contexts := make(chan *madon.Context)
-	    fmt.Println(ID)
-
-	    go func() {
-		context, err := gClient.GetStatusContext(ID)
-		// TODO: add status posting algorithm
-		if err != nil {
-		    fmt.Println(err)
-		    return
-		}
-		contexts <- context
-	    }()
-
-	    context := <- contexts
-
-	    statuses = context.Descendants
-	    for i := len(statuses)-1; i >= 0; i--{
-		makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
-	    }
-
-
-	    lineSeperator := widgets.NewQProgressBar(nil)
-	    lineSeperator.SetTextVisible(false)
-	    lineSeperator.SetValue(100)
-	    ui_posts.InsertWidget(0, lineSeperator, 0,0)
-
-	    stat, error := gClient.GetStatus(ID)
-	    if error != nil {
-		fmt.Println(error)
-	    }
-
-	    // dereference stat
-	    status := *stat
-	    makePost(status, ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
-
-	    lineSeperator2 := widgets.NewQProgressBar(nil)
-	    lineSeperator2.SetTextVisible(false)
-	    lineSeperator2.SetValue(100)
-	    ui_posts.InsertWidget(0, lineSeperator2, 0,0)
-
-	    statuses = context.Ancestors
-	    for i := len(statuses)-1; i >= 0; i--{
-		makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
-	    }
-
+    go func() {
+	context, err := gClient.GetStatusContext(ID)
+	// TODO: add status posting algorithm
+	if err != nil {
+	    fmt.Println(err)
 	    return
 	}
+	contexts <- context
+    }()
+
+    context := <- contexts
+
+    statuses := context.Descendants
+    for i := len(statuses)-1; i >= 0; i--{
+	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+    }
+
+
+    lineSeperator := widgets.NewQProgressBar(nil)
+    lineSeperator.SetTextVisible(false)
+    lineSeperator.SetValue(100)
+    ui_posts.InsertWidget(0, lineSeperator, 0,0)
+
+    stat, error := gClient.GetStatus(ID)
+    if error != nil {
+	fmt.Println(error)
+    }
+
+    // dereference stat
+    status := *stat
+    makePost(status, ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+
+    lineSeperator2 := widgets.NewQProgressBar(nil)
+    lineSeperator2.SetTextVisible(false)
+    lineSeperator2.SetValue(100)
+    ui_posts.InsertWidget(0, lineSeperator2, 0,0)
+
+    statuses = context.Ancestors
+    for i := len(statuses)-1; i >= 0; i--{
+	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+    }
+}
+
+
+func add2FeedInit (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, timeline string) () {
+    opt := timelineOpts
+    statuses := timelineGetter(gClient, opt.maxID, opt.sinceID, timeline)
+    go func() {
+	lastIDchan <- statuses[0].ID}()
 
     for i := len(statuses)-1; i >= 0; i--{
 	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
     }
 }
 
+func add2FeedUpdate (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, timeline string) () {
+    prevLastId := <- lastIDchan
+    opt := timelineOpts
+    statuses := timelineGetter(gClient, opt.maxID, prevLastId, timeline)
+
+    if len(statuses) == 0{
+	go func() {
+	    lastIDchan <- prevLastId
+	}()
+	return
+    }
+
+    go func() {
+	lastIDchan <- statuses[0].ID
+    }()
+
+    for i := len(statuses)-1; i >= 0; i--{
+	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+    }
+}
+
+func add2FeedAccount (gClient *madon.Client, lastIDchan chan int64, replyingTo *madon.Status, ui_replyStatus *widgets.QLabel, ui_posts *widgets.QVBoxLayout, ui_scrollArea *widgets.QScrollArea, ID int64) () {
+
+    opt := timelineOpts
+    var limOpts *madon.LimitParams
+    limOpts = new(madon.LimitParams)
+    limOpts.Limit = int(opt.limit)
+    limOpts.MaxID = opt.maxID
+    limOpts.SinceID = opt.sinceID
+
+    statuses, err := gClient.GetAccountStatuses(ID, false, false, false, limOpts)
+    if err != nil {
+	fmt.Println(err)
+    }
+
+    interactions := widgets.NewQHBoxLayout()
+
+    var accIDs []int64
+    accIDs = append(accIDs, ID)
+
+    currentRelationship, errRelation := gClient.GetAccountRelationships(accIDs)
+    if errRelation != nil{
+	fmt.Println(errRelation)
+    }
+
+    follow := widgets.NewQPushButton(nil)
+    if ! currentRelationship[0].Following {
+	follow.SetText("follow")
+    } else {
+	follow.SetText("followed!")
+    }
+
+    accOpt := accountsOpts
+
+    followReposts := &accOpt.reblogs
+    follow.ConnectClicked(func(bool) {
+	if follow.Text() != "followed!" {
+	    _, error := gClient.FollowAccount(ID, followReposts)
+	    if error != nil{
+		    widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+	    } else {
+		follow.SetText("followed!")
+	    }
+	} else {
+	    _, error := gClient.UnfollowAccount(ID)
+	    if error != nil{
+		    widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+	    } else {
+		follow.SetText("follow")
+	    }
+	}
+    })
+    interactions.InsertWidget(0, follow, 0,0)
+
+    muteNotification := &accOpt.muteNotifications
+    mute := widgets.NewQPushButton(nil)
+
+    if ! currentRelationship[0].Muting {
+	mute.SetText("mute")
+    } else {
+	mute.SetText("muted!")
+    }
+
+    mute.ConnectClicked(func(bool) {
+	if mute.Text() != "muted!" {
+	    _, error := gClient.MuteAccount(ID, muteNotification)
+	    if error != nil{
+		    widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+	    } else {
+		mute.SetText("muted!")
+	    }
+	} else {
+	    _, error := gClient.UnmuteAccount(ID)
+	    if error != nil{
+		    widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+	    } else {
+		mute.SetText("mute")
+	    }
+	}
+    })
+    interactions.InsertWidget(0, mute, 0,0)
+
+
+    block := widgets.NewQPushButton(nil)
+
+    if ! currentRelationship[0].Blocking {
+	block.SetText("block")
+    } else {
+	block.SetText("blocked!")
+    }
+
+    block.ConnectClicked(func(bool) {
+	if block.Text() != "blocked!" {
+	    _, error := gClient.BlockAccount(ID)
+	    if error != nil{
+		widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+	    } else {
+		block.SetText("blocked!")
+	    }
+	} else {
+	    _, error := gClient.UnblockAccount(ID)
+	    if error != nil{
+		widgets.QMessageBox_Information(nil, "Authentication successful", error.Error(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+	    } else {
+		block.SetText("block")
+	    }
+	}
+    })
+    interactions.InsertWidget(0, block, 0,0)
+
+
+    for i := len(statuses)-1; i >= 0; i--{
+	makePost(statuses[i], ui_posts, ui_replyStatus, replyingTo, ui_scrollArea, gClient, lastIDchan)
+    }
+
+    ui_posts.InsertLayout(0, interactions, 0)
+}

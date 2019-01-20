@@ -62,11 +62,11 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 
 	// put this in a function. Will need to for replying
 	ui_scrollArea, ui_posts = deletePosts(ui_scrollArea)
-	add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "initialize", ui_timelineSelector.CurrentText(), 0)
+	add2FeedInit(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, ui_timelineSelector.CurrentText())
     })
 
     ui_updateFeed.ConnectClicked(func(bool) {
-	add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "updatefeed", ui_timelineSelector.CurrentText(), 0)
+	add2FeedUpdate(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, ui_timelineSelector.CurrentText())
     })
 
     // Sending post handler
@@ -92,7 +92,7 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 
     // Fill first open with content :3
     // this should only happen once (in the beginning)
-    add2Feed(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, "initialize", ui_timelineSelector.CurrentText(), 0)
+    add2FeedInit(gClient, lastIDchan, &replyingTo, ui_replyStatus, ui_posts, ui_scrollArea, ui_timelineSelector.CurrentText())
 
     widget.SetWindowTitle("Fedi-go")
 
