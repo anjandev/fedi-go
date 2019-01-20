@@ -134,7 +134,15 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 	for {
 	    var lopt *madon.LimitParams
 	    lopt = new(madon.LimitParams)
-	    lopt.All = true
+	    // initially only get 10 notifications
+	    // but after initialization, get as many notifications as possible with each poll
+	    lopt.SinceID = lastNotifID
+
+	    if lastNotifID == 0 {
+		lopt.All = false
+		lopt.Limit = 10
+	    }
+
 	    notifications, err := gClient.GetNotifications(nil, lopt)
 
 	    if err != nil {
@@ -146,16 +154,14 @@ func mainActivity(gClient *madon.Client, lastIDchan chan int64) (*widgets.QWidge
 	    if len(notifications) == 0 {
 		continue
 	    }
-	    for i:= 0; i < 6; i++ {
-	     	if notifications[i].ID == lastNotifID {
-	     		break
-	     	}
+
+	    for i:= len(notifications)-1; i >= 0; i-- {
 		ui_notif.TriggerSlot(notifications[i])
 	    }
 
-	     lastNotifID = notifications[0].ID
+	    lastNotifID = notifications[0].ID
 
-	    time.Sleep(2 * time.Minute)
+	    time.Sleep(time.Minute * 5)
 	}
     }()
 
