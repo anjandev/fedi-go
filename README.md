@@ -1,4 +1,5 @@
 # fedi-go
+[![Build Status](https://travis-ci.com/anjandev/fedi-go.svg?branch=master)](https://travis-ci.com/anjandev/fedi-go)
 
 A non-electron fediverse client.
 
