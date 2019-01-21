@@ -2,11 +2,20 @@ sudo: required
 language: go
 services:
 - docker
-
 install:
 - docker pull therecipe/qt:linux
 - go get -u -v github.com/therecipe/qt/cmd/...
 - go get -u -v github.com/McKael/madon
-
 script:
-- $GOPATH/bin/qtdeploy -docker build linux
+- "$GOPATH/bin/qtdeploy -docker build linux"
+before_deploy: tar -czvf fedigo-linux.tar.gz deploy
+deploy:
+  provider: releases
+  api_key:
+    secure: aemuPcxYpPEWHSfKvfy2Wpb3ceIlbZpqpO9HLvWikO1f1bR3TGJI96cSgLlDNUopbRovwlFMXby0OJaisgDhfHmoc75uzGIDx+j9qCsAGBaNlhlNF4PeZQpDajGY5YxG0GRJBMSf/VM0Q4g9d0tg/tuW9lpF3C0gprIe1V73X98GguJVdqGMo0fmsDeGuvYOD6NC46H+ZIN095pcCaI6eWKQWgkhRdxiPdZYvU9wZFdiTdQbuJX/wQqZUDNFiEl56hAi7HOthTC38IFaWtoAhleJhaENMf+/8xnkKJdIZiF7iuefn1Ok/A7BfjAMSQnrj5ws7OrYFLm8koJla7Gq3AvxDSI6DZ/MhbP97D7KKR4y90wkoY6iz6EBNcF/LgwAH0cy1SffOS1yIGmfTRQjRuhPNz6kriW1pIp1UHB9uPE5O1tOAzbWoLXFq+Or6jSbeoC6wz9NDouPhjq1zb4B902et+DKwdDTrrQ2B0lD8mw2g7s+LDEdL5yFrQ7Ac49+oLgD2U/wc0EC5G35/jQEVyvQm9I1Bm1qXPBUjAL7lqyiCkqTzoXAVFZBWJ4ew1c26VTp1RrUQLd3nBqqhGgWvIJv+VNyJYDio760CnBRbthgXg16NOi6uECmHh7v1mCrWhqwOJ7Gd9B7WdfuVyMycnKei54ONy/5lzmggKb3eWI=
+  file: fedigo-linux.tar.gz
+  on:
+    repo: anjandev/fedi-go
+  skip_cleanup: true
+  on:
+    tags: true
