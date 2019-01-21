@@ -11,7 +11,8 @@ script:
 before_deploy: tar -czvf fedigo-linux.tar.gz deploy
 deploy:
   provider: releases
-  api_key: "$GITHUB_API_KEY"
+  api_key:
+    secure: vPQYjAVM80VxbgFHNLp5Ff1t9nS5CtPAhlfpw44+u8EGULw34RbSUf2xBNutAfRqx/LcUhoiF5qHNbkTqaPzhHKIgZ9f0ksoMJ4BhNxkF9LiwDJiHG+eNW9Y8TKt9ND2iIdrr8XI+BLBHI0KmyFdt+Xr2vgqqr8+EXf+fAUlyP1fZvc6O5hTJFnsN0C2VuV5zNfAbvpEhma3Ha5J0o3vY5GvO1sXXM/Tp++E8oI5Fyk/L+Ooc4ByPnE2bGQtM/egA5mFuVMdJw0WGyqS01BT21D5bQ5ZZ1e9tTiht4hmf7ulcH6ONJcDgwNawvoEbZlXPzI3974Fdc0oEvHstlZ6+T2gIHnW/gwZXagW8RVkKxfgcdNehCPKK7Q/l/jkBHyQMA1AM/MrHXo3sAunBO+KUn+xChFnrKvsiCJ+FYMxvvT+wiZuoEM/VyoShU4+8EQ5juX+Jz9N+wlB8mFQs8cwO3Dwg12piZFVLqaaLDZIB8assbfkDay8LHObiFyMgfWcW+fAWDk63QpWf80Ic16z6wHSR8Syud0zX9IPc61XsibdeMem8jg3StyatRhIXfe87pR/zFxAJbBQFCIDR2pHgFPR+0mo5iBnSDYF8JUyWnRRFVYkfkmXcs9veKlqqaQe6qhPgHp4E/ogdDlGvQ5KRvQBH5NB364v3CKHsu5ZgJQ=
   file: fedigo-linux.tar.gz
   on:
     repo: anjandev/fedi-go
