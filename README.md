@@ -36,6 +36,10 @@ I may need someone who has a mac to compile the software for me.
 
 - GNU/Linux
 
+## License
+
+GPLv3 or later
+
 ## Thanks
 
 Special thanks to the following projects for allowing this to happen
