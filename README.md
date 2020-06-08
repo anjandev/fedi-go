@@ -5,6 +5,12 @@ A non-electron fediverse client.
 
 Still in active development. This is my first project using go, qt, and the mastodon api. High level code improvement recommendations are welcome.
 
+## Usage
+
+Download the latest compiled release (called `fedigo-linux.tar.gz`) from : [https://github.com/anjandev/fedi-go/releases](https://github.com/anjandev/fedi-go/releases)
+
+Extract the tarball and run `src.sh`
+
 ## Support
 
 The "real" git repository is here: [https://git.sr.ht/~anjan/fedi-go](https://git.sr.ht/~anjan/fedi-go)
